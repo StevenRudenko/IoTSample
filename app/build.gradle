@@ -1,0 +1,116 @@
+apply plugin: 'com.android.application'
+apply plugin: 'checkstyle'
+
+repositories {
+    maven { url "https://jitpack.io" }
+    maven { url "http://dl.bintray.com/chimeraiot/maven" }
+}
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.2"
+
+    defaultConfig {
+        applicationId "io.github.stevenrudenko.iot.sample"
+        minSdkVersion 18
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+    }
+
+    signingConfigs {
+        debugSigning {
+            storeFile project.file('../config/signing/debug.keystore')
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
+        releaseSigning {
+            def Properties localProps = new Properties()
+            localProps.load(new FileInputStream(file('../local.properties')))
+            def Properties keyProps = new Properties()
+            assert localProps['keystore.props.file'];
+            keyProps.load(new FileInputStream(file(localProps['keystore.props.file'])))
+
+            storeFile project.file('../config/signing/chimeraiot.keystore')
+            keyAlias "chimeraiot"
+            storePassword keyProps["storePass"]
+            keyPassword keyProps["pass"]
+        }
+    }
+
+    buildTypes {
+        debug {
+            buildConfigField "boolean", "DEBUG_BLE", "true"
+
+            minifyEnabled false
+            jniDebuggable true
+            signingConfig signingConfigs.debugSigning
+        }
+        release {
+            buildConfigField "boolean", "DEBUG_BLE", "false"
+
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.releaseSigning
+        }
+    }
+
+    lintOptions {
+        disable 'InvalidPackage'
+        disable 'GradleDynamicVersion'
+        abortOnError false
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+
+    // workaround for "duplicate files during packaging of APK" issue
+    // see https://groups.google.com/d/msg/adt-dev/bl5Rc4Szpzg/wC8cylTWuIEJ
+    packagingOptions {
+        exclude '.readme'
+        exclude 'META-INF/ASL2.0'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/NOTICE'
+    }
+
+}
+
+task checkstyle(type: Checkstyle) {
+    configFile project.file('../config/checkstyle/checkstyle.xml')
+    showViolations true
+    source 'src'
+    include '**/*.java'
+    exclude '**/gen/**'
+    exclude '**/R.java'
+    exclude '**/BuildConfig.java'
+    exclude '**/org/**'
+
+    def configProps = ['proj.module.dir': projectDir.absolutePath]
+    configProperties configProps
+
+    // empty classpath
+    classpath = files()
+}
+preBuild.dependsOn('checkstyle')
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    // Android annotations
+    compile 'com.android.support:support-annotations:23.1.1'
+    // Material design
+    compile 'com.android.support:appcompat-v7:23.1.1'
+    compile 'com.android.support:design:23.1.1'
+    // Charts
+    compile 'com.github.PhilJay:MPAndroidChart:v2.1.4'
+    // BLE stack wrapper
+    compile ('com.chimeraiot.android:chimera-ble:0.1.6') {
+        exclude group: 'com.android.support', module: 'support-annotations'
+        exclude group: 'com.android.support', module: 'appcompat-v7'
+    }
+    // MQTT
+    compile 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.0.2'
+
+}
