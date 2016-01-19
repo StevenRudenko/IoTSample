@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Preferences -->
+    <string name="pref_server_host_key">server:host</string>
+    <string name="pref_server_port_key">server:port</string>
+    <string name="pref_server_username_key">server:username</string>
+    <string name="pref_server_password_key">server:password</string>
+    <string name="pref_server_compression_key">server:compression</string>
+    <string name="pref_server_ssl_key">server:ssl</string>
+
+</resources>

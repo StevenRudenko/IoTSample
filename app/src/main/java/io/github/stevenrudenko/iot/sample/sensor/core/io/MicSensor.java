@@ -1,4 +1,4 @@
-package io.github.stevenrudenko.iot.sample.sensor.io;
+package io.github.stevenrudenko.iot.sample.sensor.core.io;
 
 import android.content.Context;
 import android.media.AudioFormat;
@@ -8,7 +8,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.Nullable;
 
-import io.github.stevenrudenko.iot.sample.sensor.base.BaseIoTSensor;
+import io.github.stevenrudenko.iot.sample.sensor.core.base.BaseIoTSensor;
 
 /** Audio jack button (like Pressy) reader. */
 public abstract class MicSensor extends BaseIoTSensor implements Runnable {

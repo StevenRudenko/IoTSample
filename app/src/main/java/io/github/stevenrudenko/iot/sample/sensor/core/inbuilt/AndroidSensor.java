@@ -1,4 +1,4 @@
-package io.github.stevenrudenko.iot.sample.sensor.inbuilt;
+package io.github.stevenrudenko.iot.sample.sensor.core.inbuilt;
 
 import android.content.Context;
 import android.hardware.Sensor;
@@ -9,7 +9,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 
-import io.github.stevenrudenko.iot.sample.sensor.base.BaseIoTSensor;
+import io.github.stevenrudenko.iot.sample.sensor.core.base.BaseIoTSensor;
 
 /** Android sensor. */
 public abstract class AndroidSensor extends BaseIoTSensor implements SensorEventListener {
@@ -31,6 +31,10 @@ public abstract class AndroidSensor extends BaseIoTSensor implements SensorEvent
 
     protected abstract int getSensorType();
 
+    protected Sensor getSensor() {
+        return sensor;
+    }
+
     @Override
     public boolean prepare(final Context context) {
         if (sensorManager != null) {
@@ -38,6 +42,7 @@ public abstract class AndroidSensor extends BaseIoTSensor implements SensorEvent
         }
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         sensor = sensorManager.getDefaultSensor(getSensorType());
+
         return true;
     }
 

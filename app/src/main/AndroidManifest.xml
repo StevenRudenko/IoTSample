@@ -23,7 +23,7 @@
         android:theme="@style/AppTheme" >
 
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.MainActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar" >
 
@@ -34,9 +34,9 @@
 
         </activity>
 
-        <service android:name=".sensor.SensorsService"/>
+        <service android:name=".sensor.ProducerService"/>
 
-        <service android:name=".mqtt.MqttService"/>
+        <service android:name=".sensor.SubscriberService"/>
 
     </application>
 

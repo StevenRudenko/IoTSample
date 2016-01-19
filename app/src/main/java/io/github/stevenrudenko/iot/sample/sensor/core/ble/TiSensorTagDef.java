@@ -1,4 +1,4 @@
-package io.github.stevenrudenko.iot.sample.sensor.ble;
+package io.github.stevenrudenko.iot.sample.sensor.core.ble;
 
 import com.chimeraiot.android.ble.sensor.DeviceDef;
 import com.chimeraiot.android.ble.sensor.Sensor;
@@ -8,7 +8,7 @@ import android.support.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.github.stevenrudenko.iot.sample.sensor.ble.model.TiSensorTag;
+import io.github.stevenrudenko.iot.sample.sensor.core.ble.model.TiSensorTag;
 
 /** TI SensorTag sensor group. */
 public class TiSensorTagDef extends DeviceDef<TiSensorTag> {

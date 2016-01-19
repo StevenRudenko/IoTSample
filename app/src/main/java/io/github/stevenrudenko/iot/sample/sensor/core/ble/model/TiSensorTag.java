@@ -1,4 +1,4 @@
-package io.github.stevenrudenko.iot.sample.sensor.ble.model;
+package io.github.stevenrudenko.iot.sample.sensor.core.ble.model;
 
 import java.util.Arrays;
 

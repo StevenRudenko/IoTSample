@@ -9,11 +9,10 @@ import com.chimeraiot.android.ble.sensor.DeviceDef;
 import com.chimeraiot.android.ble.sensor.DeviceDefCollection;
 import com.chimeraiot.android.ble.sensor.Sensor;
 
-import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.Intent;
-import android.os.IBinder;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -23,22 +22,21 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import io.github.stevenrudenko.iot.sample.common.LocalBinder;
-import io.github.stevenrudenko.iot.sample.sensor.base.IoTSensor;
-import io.github.stevenrudenko.iot.sample.sensor.ble.BleSensor;
-import io.github.stevenrudenko.iot.sample.sensor.ble.TiSensorTagDef;
-import io.github.stevenrudenko.iot.sample.sensor.ble.TiTemperatureSensor;
-import io.github.stevenrudenko.iot.sample.sensor.inbuilt.LightSensor;
-import io.github.stevenrudenko.iot.sample.sensor.io.PressySensor;
+import io.github.stevenrudenko.iot.sample.IoTSample;
+import io.github.stevenrudenko.iot.sample.sensor.core.base.IoTSensor;
+import io.github.stevenrudenko.iot.sample.sensor.core.ble.BleSensor;
+import io.github.stevenrudenko.iot.sample.sensor.core.ble.TiSensorTagDef;
+import io.github.stevenrudenko.iot.sample.sensor.core.ble.TiTemperatureSensor;
+import io.github.stevenrudenko.iot.sample.sensor.core.inbuilt.LightSensor;
+import io.github.stevenrudenko.iot.sample.sensor.core.io.PressySensor;
+import io.github.stevenrudenko.iot.sample.sensor.model.SensorProperty;
+import io.github.stevenrudenko.iot.sample.sensor.model.SensorsModel;
 
 /** Sensors manager. */
-public class SensorsService extends Service implements SensorManager, BleServiceListener,
-        BleScanner.BleDevicesScannerListener, IoTSensor.OnSensorListener {
+public class ProducerService extends BaseService implements BleServiceListener,
+        BleScanner.BleDevicesScannerListener, IoTSensor.OnSensorListener, Runnable {
     /** Log tag. */
-    private static final String TAG = SensorsService.class.getSimpleName();
-
-    /** BLE service. */
-    public static final String BLE_SERVICE = "ble";
+    private static final String TAG = ProducerService.class.getSimpleName();
 
     /** Timestamp formatter. */
     private static final java.text.DateFormat TIMESTAMP_FORMATTER =
@@ -46,6 +44,9 @@ public class SensorsService extends Service implements SensorManager, BleService
 
     /** BLE device definition collection. */
     private static final DeviceDefCollection DEVICE_DEF_COLLECTION;
+
+    /** Default period. */
+    private static final long DEFAULT_PERIOD = 500L;
 
     static {
         DEVICE_DEF_COLLECTION = new DeviceDefCollection() {
@@ -66,9 +67,6 @@ public class SensorsService extends Service implements SensorManager, BleService
         DEVICE_DEF_COLLECTION.register("");
     }
 
-    /** Binder. */
-    private LocalBinder<SensorsService> binder = new LocalBinder<>(this);
-
     /** BLE manager. */
     private BleManager bleManager;
     /** BLE scanner. */
@@ -78,39 +76,24 @@ public class SensorsService extends Service implements SensorManager, BleService
     /** Used while formatting. */
     private final Date date = new Date();
 
+    /** Worker thread handler. */
+    private Handler threadHandler;
+    /** Period. */
+    private volatile long period = DEFAULT_PERIOD;
+
     /** Sensors. */
     private final List<IoTSensor> sensors = new ArrayList<>();
-    /** Indicates where sensors is running. */
-    private boolean isRunning;
-
-    /** Connected BLE device address. */
-    private String bleDeviceAddress = null;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        bleManager = new BleManager(DEVICE_DEF_COLLECTION);
+        //noinspection WrongConstant
+        bleManager = (BleManager) getApplicationContext().getSystemService(IoTSample.BLE_SERVICE);
         bleManager.initialize(this);
         bleManager.registerListener(this);
 
-        sensors.add(new PressySensor());
-        sensors.add(new LightSensor());
-    }
-
-    @Override
-    public Object getSystemService(final String name) {
-        if (BLE_SERVICE.equals(name)) {
-            return bleManager;
-        }
-        return super.getSystemService(name);
-    }
-
-    @Override
-    public String getSystemServiceName(final Class<?> serviceClass) {
-        if (serviceClass.equals(BleManager.class)) {
-            return BLE_SERVICE;
-        }
-        return super.getSystemServiceName(serviceClass);
+        addSensor(new PressySensor());
+        addSensor(new LightSensor());
     }
 
     @Override
@@ -132,16 +115,9 @@ public class SensorsService extends Service implements SensorManager, BleService
         bleManager.unregisterListener(this);
     }
 
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return binder;
-    }
-
     @Override
     public void onConnected(String name, String address) {
         Log.d(TAG, "BLE device connected: " + name + "@" + address);
-        bleDeviceAddress = address;
     }
 
     @Override
@@ -171,8 +147,8 @@ public class SensorsService extends Service implements SensorManager, BleService
             return;
         }
         final BleSensor bleSensor = (BleSensor) sensor;
-        sensors.add(bleSensor);
-        if (isRunning) {
+        addSensor(bleSensor);
+        if (isRunning()) {
             bleSensor.prepare(this);
             bleSensor.start(this);
         }
@@ -219,21 +195,36 @@ public class SensorsService extends Service implements SensorManager, BleService
                 + " " + sensor.getName()
                 + ": " + Arrays.toString(data);
         Log.d(TAG, message);
+
+        final SensorsModel model = getModel();
+        model.setTimestamp(System.currentTimeMillis());
+        final SensorProperty property = model.get(sensor.getId());
+        if (property != null) {
+            property.setValue(data, timestamp);
+        }
     }
 
     @Override
     public void start() {
-        if (isRunning) {
+        if (isRunning()) {
             return;
         }
 
-        isRunning = true;
+        super.start();
         scan();
 
         for (IoTSensor sensor : sensors) {
             sensor.prepare(this);
             sensor.start(this);
         }
+
+        if (threadHandler != null) {
+            return;
+        }
+        final HandlerThread thread = new HandlerThread(TAG);
+        thread.start();
+        threadHandler = new Handler(thread.getLooper());
+        threadHandler.post(this);
     }
 
     @Override
@@ -241,12 +232,12 @@ public class SensorsService extends Service implements SensorManager, BleService
         for (IoTSensor sensor : sensors) {
             sensor.stop();
         }
-        isRunning = false;
-    }
 
-    @Override
-    public boolean isRunning() {
-        return isRunning;
+        if (threadHandler != null) {
+            threadHandler.getLooper().quit();
+            threadHandler = null;
+        }
+        super.stop();
     }
 
     private void scan() {
@@ -259,4 +250,22 @@ public class SensorsService extends Service implements SensorManager, BleService
         }
     }
 
+    private void addSensor(IoTSensor sensor) {
+        sensors.add(sensor);
+        getModel().add(new SensorProperty(sensor.getId(), sensor.getName(), sensor.getValue()));
+    }
+
+    @Override
+    public void run() {
+        while (isRunning()) {
+            publish();
+            notifyListeners();
+            try {
+                Thread.sleep(period);
+                //CHECKSTYLE:OFF
+            } catch (InterruptedException ignore) {
+                //CHECKSTYLE:ON
+            }
+        }
+    }
 }

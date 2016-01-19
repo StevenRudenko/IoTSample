@@ -1,4 +1,4 @@
-package io.github.stevenrudenko.iot.sample.sensor.base;
+package io.github.stevenrudenko.iot.sample.sensor.core.base;
 
 import android.support.annotation.CallSuper;
 

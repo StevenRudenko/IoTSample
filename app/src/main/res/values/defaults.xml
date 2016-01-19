@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Preferences -->
+    <string name="pref_server_host_default">192.241.238.162</string>
+    <string name="pref_server_port_default">8883</string>
+    <string name="pref_server_username_default">iotsample</string>
+    <string name="pref_server_password_default">429Em9qP*g8TG&amp;h0</string>
+    <bool name="pref_server_compression_default">false</bool>
+    <bool name="pref_server_ssl_default">true</bool>
+
+</resources>

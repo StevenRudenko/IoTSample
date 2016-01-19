@@ -1,4 +1,4 @@
-package io.github.stevenrudenko.iot.sample.sensor.ble;
+package io.github.stevenrudenko.iot.sample.sensor.core.ble;
 
 import com.chimeraiot.android.ble.BleManager;
 import com.chimeraiot.android.ble.sensor.Sensor;
@@ -6,8 +6,9 @@ import com.chimeraiot.android.ble.sensor.Sensor;
 import android.content.Context;
 import android.support.annotation.CallSuper;
 
-import io.github.stevenrudenko.iot.sample.sensor.SensorsService;
-import io.github.stevenrudenko.iot.sample.sensor.base.IoTSensor;
+import io.github.stevenrudenko.iot.sample.IoTSample;
+import io.github.stevenrudenko.iot.sample.sensor.ProducerService;
+import io.github.stevenrudenko.iot.sample.sensor.core.base.IoTSensor;
 
 /**
  * BLE enabled sensor.
@@ -43,7 +44,8 @@ public abstract class BleSensor<M> extends Sensor<M> implements IoTSensor {
     @CallSuper
     public boolean prepare(Context context) {
         //noinspection WrongConstant
-        bleManager = (BleManager) context.getSystemService(SensorsService.BLE_SERVICE);
+        bleManager = (BleManager) context.getApplicationContext().getSystemService(
+                IoTSample.BLE_SERVICE);
         return true;
     }
 

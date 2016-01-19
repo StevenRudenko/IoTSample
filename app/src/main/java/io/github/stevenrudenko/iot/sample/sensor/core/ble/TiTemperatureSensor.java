@@ -1,4 +1,4 @@
-package io.github.stevenrudenko.iot.sample.sensor.ble;
+package io.github.stevenrudenko.iot.sample.sensor.core.ble;
 
 import com.chimeraiot.android.ble.BleGattExecutor;
 import com.chimeraiot.android.ble.BleManager;
@@ -7,7 +7,8 @@ import com.chimeraiot.android.ble.sensor.SensorUtils;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.os.Bundle;
 
-import io.github.stevenrudenko.iot.sample.sensor.ble.model.TiSensorTag;
+import io.github.stevenrudenko.iot.sample.sensor.core.base.Sensors;
+import io.github.stevenrudenko.iot.sample.sensor.core.ble.model.TiSensorTag;
 
 import static java.lang.Math.pow;
 
@@ -26,7 +27,7 @@ public class TiTemperatureSensor extends BleSensor<TiSensorTag> {
 
     @Override
     public int getId() {
-        return 0;
+        return Sensors.BLE_TI_TEMP_SENSOR;
     }
 
     @Override

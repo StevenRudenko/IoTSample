@@ -1,8 +1,6 @@
-package io.github.stevenrudenko.iot.sample.sensor.base;
+package io.github.stevenrudenko.iot.sample.sensor.core.base;
 
 import android.content.Context;
-
-import java.util.HashMap;
 
 /** Sensor definition. */
 public interface IoTSensor {

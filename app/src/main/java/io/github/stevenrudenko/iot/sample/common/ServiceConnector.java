@@ -26,7 +26,7 @@ public class ServiceConnector<S extends Service> implements ServiceConnection {
 
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
-        //noinspection unchecked
+        @SuppressWarnings("unchecked")
         final LocalBinder<S> binder = (LocalBinder<S>) service;
         this.service = binder.getSerivce();
         listener.onServiceBind(this.service);

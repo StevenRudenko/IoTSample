@@ -1,4 +1,25 @@
 <resources>
     <string name="app_name">IoT Sample</string>
+
+    <!-- Preferences -->
     <string name="action_settings">Settings</string>
+    <string name="pref_server_server">Server settings</string>
+    <string name="pref_server_host">Hostname/IP</string>
+    <string name="pref_server_port">Port</string>
+    <string name="pref_server_credentials">Credentials</string>
+    <string name="pref_server_username">Username</string>
+    <string name="pref_server_password">Password</string>
+    <string name="pref_server_additional">Additional settings</string>
+    <string name="pref_server_compression">Compression</string>
+    <string name="pref_server_ssl">TLS encryption</string>
+    <!-- Main -->
+    <string name="app_name_local">Local</string>
+    <string name="app_name_mqtt">MQTT</string>
+    <string-array name="app_spinner">
+        <item>@string/app_name_local</item>
+        <item>@string/app_name_mqtt</item>
+    </string-array>
+    <string name="main_service_start">Sensors have been started</string>
+    <string name="main_service_stop">Sensors have been stopped</string>
+
 </resources>

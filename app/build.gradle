@@ -2,8 +2,22 @@ apply plugin: 'com.android.application'
 apply plugin: 'checkstyle'
 
 repositories {
+    // MQTT client
+    mavenCentral()
+    // Charts
     maven { url "https://jitpack.io" }
+    // BLE stash wrapper
     maven { url "http://dl.bintray.com/chimeraiot/maven" }
+}
+
+/* Gets the version name from the latest Git tag */
+def getVersionName = { ->
+    def stdout = new ByteArrayOutputStream()
+    exec {
+        commandLine 'git', 'describe', '--tags'
+        standardOutput = stdout
+    }
+    return stdout.toString().trim()
 }
 
 android {
@@ -15,7 +29,16 @@ android {
         minSdkVersion 18
         targetSdkVersion 23
         versionCode 1
-        versionName "1.0"
+        versionName getVersionName()
+
+        // print the version output to the Gradle console
+        printf("Version code: " + versionCode + "\n" + "Version name: " + versionName + "\n")
+
+        buildConfigField "String", "BROKER_HOST", "\"192.241.238.162\""
+        buildConfigField "String", "BROKER_PORT", "\"8883\""
+        buildConfigField "String", "BROKER_PROTOCOL", "\"ssl://\"" // "tcp://"
+        buildConfigField "String", "BROKER_USERNAME", "\"iotsample\""
+
     }
 
     signingConfigs {
@@ -112,5 +135,9 @@ dependencies {
     }
     // MQTT
     compile 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.0.2'
+    // Jackson Json parser
+    compile 'com.fasterxml.jackson.core:jackson-core:2.7.0'
+    compile 'com.fasterxml.jackson.core:jackson-annotations:2.7.0'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.7.0'
 
 }
