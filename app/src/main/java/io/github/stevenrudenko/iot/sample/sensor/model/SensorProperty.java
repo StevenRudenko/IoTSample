@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.Arrays;
 
+import io.github.stevenrudenko.iot.sample.sensor.core.base.IoTSensor;
+
 /** Sensor property.  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SensorProperty {
@@ -17,20 +19,29 @@ public class SensorProperty {
     /** Timestamp. */
     private long timestamp;
 
+    /** Refresh timeout. */
+    @JsonIgnore
+    private long refreshTimeout;
+
+    @SuppressWarnings("unused")
     public SensorProperty() {
         // for Jackson
     }
 
-    public SensorProperty(int id, String name, float[] values) {
-        this.id = id;
-        this.name = name;
+    public SensorProperty(IoTSensor sensor) {
+        this.id = sensor.getId();
+        this.name = sensor.getName();
+        final float[] values = sensor.getValue();
         this.values = Arrays.copyOf(values, values.length);
+        this.refreshTimeout = sensor.getRefreshTimeout();
     }
 
     @JsonIgnore
     public void setValue(float[] values, long timestamp) {
-        this.timestamp = timestamp;
-        System.arraycopy(values, 0, this.values, 0, values.length);
+        synchronized (this) {
+            this.timestamp = timestamp;
+            System.arraycopy(values, 0, this.values, 0, values.length);
+        }
     }
 
     public int getId() {
@@ -48,4 +59,16 @@ public class SensorProperty {
     public long getTimestamp() {
         return timestamp;
     }
+
+    public void reset(long delay) {
+        if (delay < refreshTimeout) {
+            return;
+        }
+        synchronized (this) {
+            for (int i = 0; i < values.length; i++) {
+                values[i] = 0f;
+            }
+        }
+    }
+
 }

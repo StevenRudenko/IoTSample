@@ -22,4 +22,6 @@
     <string name="main_service_start">Sensors have been started</string>
     <string name="main_service_stop">Sensors have been stopped</string>
 
+    <string name="li_mqttt_values_template">Temperature = %1$.2f\nPressy = %2$.2f\nLight = %3$.2f</string>
+
 </resources>

@@ -21,6 +21,14 @@ public class TiTemperatureSensor extends BleSensor<TiSensorTag> {
     /** Configuration UUID. */
     private static final String UUID_CONFIG = "f000aa02-0451-4000-b000-000000000000";
 
+    /** Max value. */
+    private static final float MAX_VALUE = 60;
+    /** Min value. */
+    private static final float MIN_VALUE = 0;
+
+    /** Update period. */
+    private static final long REFRESH_PERIOD = 1050;
+
     public TiTemperatureSensor(String address, TiSensorTag model) {
         super(address, model);
     }
@@ -33,6 +41,11 @@ public class TiTemperatureSensor extends BleSensor<TiSensorTag> {
     @Override
     public String getName() {
         return "TI temperature";
+    }
+
+    @Override
+    public long getRefreshTimeout() {
+        return REFRESH_PERIOD;
     }
 
     @Override
@@ -55,6 +68,15 @@ public class TiTemperatureSensor extends BleSensor<TiSensorTag> {
     }
 
     @Override
+    protected void post(final float[] data, final long timestamp) {
+        // normalize
+        for (int i = 0; i < data.length; i++) {
+            data[i] = (data[i] - MIN_VALUE) / MAX_VALUE;
+        }
+        super.post(data, timestamp);
+    }
+
+    @Override
     public BleGattExecutor.ServiceAction[] update(String uuid, Bundle data) {
         switch (uuid) {
             case UUID_CONFIG:
@@ -70,24 +92,30 @@ public class TiTemperatureSensor extends BleSensor<TiSensorTag> {
 
     @Override
     protected boolean apply(BluetoothGattCharacteristic c, TiSensorTag data) {
-        /* The IR Temperature sensor produces two measurements;
-         * Object (AKA target or IR) Temperature,
-         * and Ambient (AKA die) temperature.
-         *
-         * Both need some conversion, and Object temperature is dependent on Ambient temperature.
-         *
-         * They are stored as [ObjLSB, ObjMSB, AmbLSB, AmbMSB] (4 bytes)
-         * Which means we need to shift the bytes around to get the correct values.
-         */
-        double ambient = extractAmbientTemperature(c);
-        double target = extractTargetTemperature(c, ambient);
+        final String uuid = c.getUuid().toString();
+        switch (uuid) {
+            case UUID_DATA:
+                /* The IR Temperature sensor produces two measurements;
+                 * Object (AKA target or IR) Temperature,
+                 * and Ambient (AKA die) temperature.
+                 *
+                 * Both need some conversion, and Object temperature is dependent on Ambient temperature.
+                 *
+                 * They are stored as [ObjLSB, ObjMSB, AmbLSB, AmbMSB] (4 bytes)
+                 * Which means we need to shift the bytes around to get the correct values.
+                 */
+                double ambient = extractAmbientTemperature(c);
+                double target = extractTargetTemperature(c, ambient);
 
-        final float[] values = data.getTemp();
-        values[0] = (float) ambient;
-        values[1] = (float) target;
+                final float[] values = data.getTemp();
+                values[0] = (float) ambient;
+                values[1] = (float) target;
 
-        post(values, System.currentTimeMillis());
-        return true;
+                post(values, System.currentTimeMillis());
+                return true;
+            default:
+                return false;
+        }
     }
 
     private static double extractAmbientTemperature(BluetoothGattCharacteristic c) {
@@ -103,7 +131,7 @@ public class TiTemperatureSensor extends BleSensor<TiSensorTag> {
 
         double Tdie = ambient + 273.15;
 
-        double S0 = 5.593E-14;	// Calibration factor
+        double S0 = 5.593E-14;  // Calibration factor
         double a1 = 1.75E-3;
         double a2 = -1.678E-5;
         double b0 = -2.94E-5;

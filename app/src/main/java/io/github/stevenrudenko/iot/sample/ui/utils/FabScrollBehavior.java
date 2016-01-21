@@ -1,6 +1,7 @@
 package io.github.stevenrudenko.iot.sample.ui.utils;
 
 import android.content.Context;
+import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.view.ViewCompat;
@@ -49,17 +50,18 @@ public class FabScrollBehavior extends FloatingActionButton.Behavior {
 
         if (dyConsumed > 0 && !this.animatingOut && child.getVisibility() == View.VISIBLE) {
             // User scrolled down and the FAB is currently visible -> hide the FAB
-            animateOut(child);
+            animateOut(child, null);
         } else if (dyConsumed < 0 && child.getVisibility() != View.VISIBLE) {
             // User scrolled up and the FAB is currently not visible -> show the FAB
-            animateIn(child);
+            animateIn(child, null);
         }
     }
 
     /**
      * Same animation that FloatingActionButton.Behavior uses to hide
      * the FAB when the AppBarLayout exits. */
-    private void animateOut(final FloatingActionButton button) {
+    public void animateOut(final FloatingActionButton button,
+            @Nullable final ViewPropertyAnimatorListener listener) {
         final CoordinatorLayout.LayoutParams lp =
                 (CoordinatorLayout.LayoutParams) button.getLayoutParams();
         final int fabBottom = lp.bottomMargin;
@@ -69,15 +71,24 @@ public class FabScrollBehavior extends FloatingActionButton.Behavior {
                 .setListener(new ViewPropertyAnimatorListener() {
                     public void onAnimationStart(View view) {
                         FabScrollBehavior.this.animatingOut = true;
+                        if (listener != null) {
+                            listener.onAnimationStart(view);
+                        }
                     }
 
                     public void onAnimationCancel(View view) {
                         FabScrollBehavior.this.animatingOut = false;
+                        if (listener != null) {
+                            listener.onAnimationCancel(view);
+                        }
                     }
 
                     public void onAnimationEnd(View view) {
                         FabScrollBehavior.this.animatingOut = false;
                         view.setVisibility(View.GONE);
+                        if (listener != null) {
+                            listener.onAnimationEnd(view);
+                        }
                     }
                 })
                 .start();
@@ -87,9 +98,11 @@ public class FabScrollBehavior extends FloatingActionButton.Behavior {
      * Same animation that FloatingActionButton.Behavior uses
      * to show the FAB when the AppBarLayout enters.
      */
-    private void animateIn(FloatingActionButton button) {
+    public void animateIn(FloatingActionButton button,
+            @Nullable ViewPropertyAnimatorListener listener) {
         button.setVisibility(View.VISIBLE);
         ViewCompat.animate(button).setDuration(animationDuration)
+                .setListener(listener)
                 .translationY(0.0F)
                 .scaleX(1.0F)
                 .scaleY(1.0F)

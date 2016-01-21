@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp"
+    tools:context=".ui.MainActivity">
+
+    <View
+        android:id="@+id/li_mqtt_color"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_centerVertical="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        tools:background="#ffff00ff" />
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+
+        android:layout_toLeftOf="@id/li_mqtt_color"
+        android:layout_toStartOf="@id/li_mqtt_color"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true">
+
+        <TextView
+            tools:text="Nexus 4"
+            android:id="@+id/li_mqtt_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:textAppearance="?android:textAppearanceMedium"/>
+
+        <TextView
+            tools:text="TI temperature = 0.46\nLight Sensor = 0.04\nPressy = 0.0"
+            android:id="@+id/li_mqtt_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minLines="3"
+            android:maxLines="3"/>
+
+    </LinearLayout>
+
+
+</RelativeLayout>

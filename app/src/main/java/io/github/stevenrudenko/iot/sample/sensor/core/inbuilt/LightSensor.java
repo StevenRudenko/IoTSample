@@ -11,6 +11,9 @@ public class LightSensor extends AndroidSensor {
     /** Log tag. */
     private static final String TAG = LightSensor.class.getSimpleName();
 
+    /** Overridden max value. */
+    private static final int OVERRIDE_MAX = 50;
+
     /** Used to send correct value array. */
     private final float[] proxyValue = new float[1];
 
@@ -32,6 +35,12 @@ public class LightSensor extends AndroidSensor {
     }
 
     @Override
+    public long getRefreshTimeout() {
+        // refreshes on change
+        return Long.MAX_VALUE;
+    }
+
+    @Override
     protected int getSensorType() {
         return Sensor.TYPE_LIGHT;
     }
@@ -47,12 +56,18 @@ public class LightSensor extends AndroidSensor {
         if (result) {
             max = getSensor().getMaximumRange();
             Log.d(TAG, getName() + ": max value=" + max);
+            // override to make goog demo
+            max = OVERRIDE_MAX;
         }
         return result;
     }
 
     @Override
     protected void post(final float[] data, final long timestamp) {
+        // normalize
+        if (data[0] > max) {
+            data[0] = max;
+        }
         proxyValue[0] = data[0] / max;
         super.post(proxyValue, timestamp);
     }

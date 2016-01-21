@@ -7,7 +7,6 @@ import android.content.Context;
 import android.support.annotation.CallSuper;
 
 import io.github.stevenrudenko.iot.sample.IoTSample;
-import io.github.stevenrudenko.iot.sample.sensor.ProducerService;
 import io.github.stevenrudenko.iot.sample.sensor.core.base.IoTSensor;
 
 /**

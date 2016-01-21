@@ -28,7 +28,7 @@ import io.github.stevenrudenko.iot.sample.sensor.core.ble.BleSensor;
 import io.github.stevenrudenko.iot.sample.sensor.core.ble.TiSensorTagDef;
 import io.github.stevenrudenko.iot.sample.sensor.core.ble.TiTemperatureSensor;
 import io.github.stevenrudenko.iot.sample.sensor.core.inbuilt.LightSensor;
-import io.github.stevenrudenko.iot.sample.sensor.core.io.PressySensor;
+import io.github.stevenrudenko.iot.sample.sensor.core.io.PressySwitchSensor;
 import io.github.stevenrudenko.iot.sample.sensor.model.SensorProperty;
 import io.github.stevenrudenko.iot.sample.sensor.model.SensorsModel;
 
@@ -92,7 +92,7 @@ public class ProducerService extends BaseService implements BleServiceListener,
         bleManager.initialize(this);
         bleManager.registerListener(this);
 
-        addSensor(new PressySensor());
+        addSensor(new PressySwitchSensor());
         addSensor(new LightSensor());
     }
 
@@ -195,12 +195,13 @@ public class ProducerService extends BaseService implements BleServiceListener,
                 + " " + sensor.getName()
                 + ": " + Arrays.toString(data);
         Log.d(TAG, message);
-
-        final SensorsModel model = getModel();
-        model.setTimestamp(System.currentTimeMillis());
-        final SensorProperty property = model.get(sensor.getId());
-        if (property != null) {
-            property.setValue(data, timestamp);
+        synchronized (this) {
+            final SensorsModel model = getModel();
+            model.setTimestamp(System.currentTimeMillis());
+            final SensorProperty property = model.get(sensor.getId());
+            if (property != null) {
+                property.setValue(data, timestamp);
+            }
         }
     }
 
@@ -252,14 +253,17 @@ public class ProducerService extends BaseService implements BleServiceListener,
 
     private void addSensor(IoTSensor sensor) {
         sensors.add(sensor);
-        getModel().add(new SensorProperty(sensor.getId(), sensor.getName(), sensor.getValue()));
+        getModel().add(new SensorProperty(sensor));
     }
 
     @Override
     public void run() {
         while (isRunning()) {
-            publish();
-            notifyListeners();
+            synchronized (this) {
+                getModel().reset();
+                publish();
+                notifyListeners();
+            }
             try {
                 Thread.sleep(period);
                 //CHECKSTYLE:OFF

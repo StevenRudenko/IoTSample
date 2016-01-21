@@ -79,6 +79,14 @@ public class SensorsModel {
         }
     }
 
+    public void reset() {
+        for (SensorProperty property : sensors.values()) {
+            final long timestamp = property.getTimestamp();
+            final long delay = System.currentTimeMillis() - timestamp;
+            property.reset(delay);
+        }
+    }
+
     @Override
     public String toString() {
         final StringBuilder builder = new StringBuilder();

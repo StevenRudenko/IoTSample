@@ -8,10 +8,12 @@ import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.ViewPropertyAnimatorListenerAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.ThemedSpinnerAdapter;
 import android.support.v7.widget.Toolbar;
@@ -28,6 +30,7 @@ import android.widget.TextView;
 
 import io.github.stevenrudenko.iot.sample.R;
 import io.github.stevenrudenko.iot.sample.sensor.BaseService;
+import io.github.stevenrudenko.iot.sample.ui.utils.FabScrollBehavior;
 
 /** Main activity. */
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -81,7 +84,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         spinner.setAdapter(adapter);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            public void onItemSelected(AdapterView<?> parent, View view, final int position, long id) {
                 final Fragment hide = active;
                 active = screens[position];
                 if (hide == active) {
@@ -100,6 +103,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } else {
                     fab.setImageResource(android.R.drawable.ic_media_play);
                 }
+
+                getFabScrollBehavior().animateOut(fab, new ViewPropertyAnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(final View view) {
+                        final Resources res = getResources();
+                        final int color = res.getColor(
+                                position == 0 ? R.color.colorLocal : R.color.colorMqtt);
+                        toolbar.setBackgroundColor(color);
+                        getFabScrollBehavior().animateIn(fab, null);
+                    }
+                });
             }
 
             @Override
@@ -221,6 +235,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         public void setDropDownViewTheme(Resources.Theme theme) {
             dropDownHelper.setDropDownViewTheme(theme);
         }
+    }
+
+    private FabScrollBehavior getFabScrollBehavior() {
+        final CoordinatorLayout.LayoutParams p =
+                (CoordinatorLayout.LayoutParams) fab.getLayoutParams();
+        return (FabScrollBehavior) p.getBehavior();
     }
 
 }
