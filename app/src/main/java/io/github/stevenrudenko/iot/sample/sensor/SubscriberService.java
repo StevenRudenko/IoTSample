@@ -4,12 +4,6 @@ package io.github.stevenrudenko.iot.sample.sensor;
 public class SubscriberService extends BaseService {
 
     @Override
-    public void onCreate() {
-        super.onCreate();
-
-    }
-
-    @Override
     public void start() {
         super.start();
         getMqttManager().subscribe();

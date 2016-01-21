@@ -104,22 +104,22 @@ public class MqttManager implements MqttCallback {
         }
         final MqttConnectOptions options = MqttUtils.getOptions(context, prefs);
         try {
-            if (client.isConnected() || state == STATE_CONNECTING || state == STATE_DISCONNECTING) {
-                return;
+        if (client.isConnected() || state == STATE_CONNECTING || state == STATE_DISCONNECTING) {
+            return;
+        }
+        state = STATE_CONNECTING;
+        client.connect(options, null, new IMqttActionListener() {
+            @Override
+            public void onSuccess(final IMqttToken asyncActionToken) {
+                state = STATE_CONNECTED;
             }
-            state = STATE_CONNECTING;
-            client.connect(options, null, new IMqttActionListener() {
-                @Override
-                public void onSuccess(final IMqttToken asyncActionToken) {
-                    state = STATE_CONNECTED;
-                }
 
-                @Override
-                public void onFailure(final IMqttToken asyncActionToken,
-                        final Throwable exception) {
-                    state = STATE_DISCONNECTED;
-                }
-            });
+            @Override
+            public void onFailure(final IMqttToken asyncActionToken,
+                    final Throwable exception) {
+                state = STATE_DISCONNECTED;
+            }
+        });
         } catch (MqttException e) {
             Log.e(TAG, "Fail to connect MQTT client", e);
         }

@@ -32,6 +32,11 @@ public abstract class MicSensor extends BaseIoTSensor implements Runnable {
     }
 
     @Override
+    public boolean available(final Context context) {
+        return prepare(context);
+    }
+
+    @Override
     public boolean prepare(final Context context) {
         if (recorder == null) {
             final int minBufferSize = AudioRecord.getMinBufferSize(AUDIO_SAMPLE_FREQ, 2,

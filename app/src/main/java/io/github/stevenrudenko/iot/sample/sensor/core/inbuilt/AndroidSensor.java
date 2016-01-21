@@ -36,14 +36,18 @@ public abstract class AndroidSensor extends BaseIoTSensor implements SensorEvent
     }
 
     @Override
+    public boolean available(final Context context) {
+        return prepare(context);
+    }
+
+    @Override
     public boolean prepare(final Context context) {
         if (sensorManager != null) {
-            return true;
+            return sensor != null;
         }
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         sensor = sensorManager.getDefaultSensor(getSensorType());
-
-        return true;
+        return sensor != null;
     }
 
     @Override
@@ -54,6 +58,9 @@ public abstract class AndroidSensor extends BaseIoTSensor implements SensorEvent
         }
         if (sensorManager == null) {
             throw new IllegalStateException("Call prepare() before start()");
+        }
+        if (sensor == null) {
+            return;
         }
 
         final HandlerThread thread = new HandlerThread(getTag());

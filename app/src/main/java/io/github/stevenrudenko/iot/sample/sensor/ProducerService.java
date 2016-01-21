@@ -11,6 +11,10 @@ import com.chimeraiot.android.ble.sensor.Sensor;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.Nullable;
@@ -84,6 +88,9 @@ public class ProducerService extends BaseService implements BleServiceListener,
     /** Sensors. */
     private final List<IoTSensor> sensors = new ArrayList<>();
 
+    /** Bluetooth restart receiver. */
+    private final BluetoothRestartReceiver btRestartReciever = new BluetoothRestartReceiver();
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -92,13 +99,22 @@ public class ProducerService extends BaseService implements BleServiceListener,
         bleManager.initialize(this);
         bleManager.registerListener(this);
 
-        addSensor(new PressySwitchSensor());
-        addSensor(new LightSensor());
+        final PressySwitchSensor pressySensor = new PressySwitchSensor();
+        if (pressySensor.available(this)) {
+            addSensor(pressySensor);
+        }
+        final LightSensor lightSensor = new LightSensor();
+        if (lightSensor.available(this)) {
+            addSensor(lightSensor);
+        }
+
+
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        btRestartReciever.unregister(this);
 
         stop();
 
@@ -122,8 +138,12 @@ public class ProducerService extends BaseService implements BleServiceListener,
 
     @Override
     public void onConnectionFailed(String name, String address, int status, int state) {
-        Log.w(TAG, "BLE device connection failed: " + name + "@" + address);
-        scan();
+        Log.w(TAG, "BLE device connection failed: " + name + "@" + address + " status=" + status);
+        if (status == 133) {
+            btRestartReciever.restart(this);
+        } else {
+            scan();
+        }
     }
 
     @Override
@@ -243,6 +263,7 @@ public class ProducerService extends BaseService implements BleServiceListener,
 
     private void scan() {
         final BluetoothAdapter adapter = BleUtils.getBluetoothAdapter(this);
+        //noinspection ConstantConditions
         if (adapter != null && adapter.isEnabled()) {
             if (bleScanner == null) {
                 bleScanner = new BleScanCompat(adapter, this);
@@ -272,4 +293,42 @@ public class ProducerService extends BaseService implements BleServiceListener,
             }
         }
     }
+
+    private class BluetoothRestartReceiver extends BroadcastReceiver {
+        /** Indicates whether receiver is registered. */
+        private boolean isRegistered = false;
+
+        public void restart(Context context) {
+            final BluetoothAdapter adapter = BleUtils.getBluetoothAdapter(context);
+            //noinspection ConstantConditions
+            if (adapter != null) {
+                register(context);
+                adapter.disable();
+            }
+        }
+
+        public void register(Context context) {
+            context.registerReceiver(this, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
+            isRegistered = true;
+        }
+
+        public void unregister(Context context) {
+            if (isRegistered) {
+                context.unregisterReceiver(this);
+            }
+            isRegistered = false;
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final BluetoothAdapter adapter = BleUtils.getBluetoothAdapter(context);
+            //noinspection ConstantConditions
+            if (adapter != null && !adapter.isEnabled()) {
+                adapter.enable();
+                unregister(context);
+                scan();
+            }
+        }
+    }
+
 }
